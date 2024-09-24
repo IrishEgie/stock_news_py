@@ -15,9 +15,12 @@ def send_email():
         for i in range(3):
             email_body += f"Headline: {news_data[i]['title']}\nBrief: {news_data[i]['description']}\n\n"
         
-        # Send the email
-        connection.sendmail(from_addr=EMAIL, to_addrs=send_to, 
-                            msg=f"Subject: Stock Update & News\n\n{email_body}")
+        connection.sendmail(
+            from_addr=EMAIL,
+            to_addrs=send_to,
+            msg=f"Subject: TSLA Stock Update: {'🔺' if percentage_change > 0 else '🔻'}{abs(percentage_change):.2f}%\n\n{email_body}"
+        )
+
 
 ## STEP 2: Use https://newsapi.org
 # Instead of printing ("Get News"), actually get the first 3 news pieces for the COMPANY_NAME. 
