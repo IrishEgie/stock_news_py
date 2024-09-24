@@ -19,9 +19,22 @@ def send_email():
         connection.sendmail(from_addr=EMAIL, to_addrs=send_to, 
                             msg=f"Subject: Stock Update & News\n\n{email_body}")
 
+## STEP 2: Use https://newsapi.org
+# Instead of printing ("Get News"), actually get the first 3 news pieces for the COMPANY_NAME. 
 
-STOCK = "TSLA"
-COMPANY_NAME = "Tesla Inc"
+news_params = {
+    "q": "tesla",
+    "sortBy":"publishedAt",
+    "apiKey":news_api_key
+} 
+
+try:
+    news_response = rq.get("https://newsapi.org/v2/everything?", params=news_params)
+    news_response.raise_for_status()
+    news_data = news_response.json()["articles"]
+except Exception as e:
+    print(f"Error fetching news: {e}")
+
 
 ## STEP 1: Use https://www.alphavantage.co
 # When STOCK price increase/decreases by 5% between yesterday and the day before yesterday then print("Get News").
@@ -61,28 +74,11 @@ else:
 
 # print(news_data)
 
-## STEP 2: Use https://newsapi.org
-# Instead of printing ("Get News"), actually get the first 3 news pieces for the COMPANY_NAME. 
-
-news_params = {
-    "q": "tesla",
-    "sortBy":"publishedAt",
-    "apiKey":news_api_key
-} 
-
-try:
-    news_response = rq.get("https://newsapi.org/v2/everything?", params=news_params)
-    news_response.raise_for_status()
-    news_data = news_response.json()["articles"]
-except Exception as e:
-    print(f"Error fetching news: {e}")
 
 
 
 
 #Optional: Format the SMS message like this: 
-
-
 """
 TSLA: 🔺2%
 Headline: Were Hedge Funds Right About Piling Into Tesla Inc. (TSLA)?. 
