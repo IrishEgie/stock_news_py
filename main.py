@@ -6,12 +6,19 @@ import smtplib
 # Send a seperate message with the percentage change and each article's title and description to your phone number. 
 
 def send_email():
-    with smtplib.SMTP("smtp.gmail.com",587) as connection:
+    with smtplib.SMTP("smtp.gmail.com", 587) as connection:
         connection.starttls()
-        connection.login(user=EMAIL,password=EMAIL_APP_PASS)
-        for i in range(3):
-            connection.sendmail(from_addr=EMAIL,to_addrs=send_to,msg=f"Subject: Headline:{news_data[i]["title"]} \n\n Brief:{news_data[i]["description"]}")
+        connection.login(user=EMAIL, password=EMAIL_APP_PASS)
         
+        # Create the email content for the top 3 articles
+        email_body = ""
+        for i in range(3):
+            email_body += f"Headline: {news_data[i]['title']}\nBrief: {news_data[i]['description']}\n\n"
+        
+        # Send the email
+        connection.sendmail(from_addr=EMAIL, to_addrs=send_to, 
+                            msg=f"Subject: Stock Update & News\n\n{email_body}")
+
 
 STOCK = "TSLA"
 COMPANY_NAME = "Tesla Inc"
@@ -19,7 +26,7 @@ COMPANY_NAME = "Tesla Inc"
 ## STEP 1: Use https://www.alphavantage.co
 # When STOCK price increase/decreases by 5% between yesterday and the day before yesterday then print("Get News").
 stock_params = {
-    "function":"TIME_SERIES_INTRADAY",
+    "function":"TIME_SERIES_DAILY",
     "symbol":"IBM",
     "interval":"1min",
     "apikey":stock_api_key
@@ -42,12 +49,15 @@ previous_close = float(time_series[previous]["4. close"])
 # Calculate the difference
 price_difference = most_recent_close - previous_close
 
-# Check if the difference is equal to or greater than 5
-if abs(price_difference) >= 5:
-    print(f"Stock price changed by {price_difference:.2f}, which is 5 or more.")
+# Calculate the percentage difference
+percentage_change = (price_difference / previous_close) * 100
+
+# Check if the percentage change is equal to or greater than 5%
+if abs(percentage_change) >= 5:
+    print(f"Stock price changed by {percentage_change:.2f}%, which is 5% or more.")
     send_email()
 else:
-    print(f"Stock price changed by {price_difference:.2f}, which is less than 5.")
+    print(f"Stock price changed by {percentage_change:.2f}%, which is less than 5%.")
 
 # print(news_data)
 
@@ -60,8 +70,13 @@ news_params = {
     "apiKey":news_api_key
 } 
 
-news_response = rq.get("https://newsapi.org/v2/everything?", params=news_params)
-news_data = news_response.json()["articles"] # Type List
+try:
+    news_response = rq.get("https://newsapi.org/v2/everything?", params=news_params)
+    news_response.raise_for_status()
+    news_data = news_response.json()["articles"]
+except Exception as e:
+    print(f"Error fetching news: {e}")
+
 
 
 
